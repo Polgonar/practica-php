@@ -1,0 +1,44 @@
+name: PSR-12 Lint
+
+on:
+  push:
+    branches: ["*"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  phpcs:
+    name: PSR-12 Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: ⬇ Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: latest
+          extensions: mbstring, ctype, iconv, xml, dom
+          tools: composer, cs2pr
+          coverage: none
+
+      - name: ♻️ Cache Composer
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.composer/cache/files
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.json') }}
+          restore-keys: |
+            ${{ runner.os }}-composer-
+
+      - name: 💾 Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      # Always run PHPCS to fail on violations
+      - name: 🔍 Run PHPCS (PSR-12)
+        run: ./vendor/bin/phpcs --standard=PSR12 src
+
+      # Optional: add annotations when running on a PR
+      - name: 📝 Annotate PR with PHPCS (cs2pr)
+        if: failure() && github.event_name == 'pull_request'
+        run: ./vendor/bin/phpcs --standard=PSR12 --report=checkstyle src | cs2pr

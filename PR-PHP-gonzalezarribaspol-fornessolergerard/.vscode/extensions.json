@@ -1,0 +1,16 @@
+{
+    "recommendations": [
+        // Recomendaciones generales
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode",
+        "vscode-icons-team.vscode-icons",
+        "eamodio.gitlens",
+        "vivaxy.vscode-conventional-commits",
+
+        // Recomendaciones para PHP
+        "shevaua.phpcs",
+        "junstyle.php-cs-fixer",
+        "bmewburn.vscode-intelephense-client"
+    ],
+    "unwantedRecommendations": []
+}

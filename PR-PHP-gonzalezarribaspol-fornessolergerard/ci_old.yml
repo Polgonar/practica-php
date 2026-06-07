@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  e2e-and-style:
+    runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: password
+          MYSQL_DATABASE: taquilla
+        ports: ['3306:3306']
+        options: >-
+          --health-cmd="mysqladmin ping -h 127.0.0.1 -ppassword"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # ---------- PHP ----------
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: pdo_mysql, mysqli
+          coverage: none
+
+      - name: Composer install
+        run: composer install --no-interaction --prefer-dist
+
+      # ---------- Node ----------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      # ---------- PNPM ----------
+      - name: Setup PNPM
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      # ---------- Dependencias Node ----------
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      # ---------- Playwright ----------
+      - name: Install Playwright deps
+        run: pnpx playwright install --with-deps
+
+      # ---------- Esperar MySQL y cargar SQL -----------
+      - name: Wait for MySQL
+        run: |
+          for i in `seq 1 30`; do
+            mysql -h 127.0.0.1 -uroot -ppassword -e "SELECT 1" && break
+            sleep 2
+          done
+
+      - name: Import schema and seed
+        run: |
+          mysql -h 127.0.0.1 -uroot -ppassword taquilla < db/schema_and_seed.sql
+
+      # ---------- Variables de entorno para la app ----------
+      - name: Export env vars
+        run: |
+          echo "DB_HOST=127.0.0.1" >> $GITHUB_ENV
+          echo "DB_NAME=taquilla" >> $GITHUB_ENV
+          echo "DB_USER=root" >> $GITHUB_ENV
+          echo "DB_PASS=password" >> $GITHUB_ENV
+          echo "BASE_URL=http://localhost:8000" >> $GITHUB_ENV
+
+      # ---------- Servidor PHP embebido ----------
+      - name: Start PHP built-in server
+        run: |
+          php -S 0.0.0.0:8000 -t . > server.log 2>&1 &
+          sleep 2
+
+      # ---------- PSR-12 ----------
+      - name: PHPCS (PSR-12)
+        run: composer run lint
+
+      # ---------- E2E ----------
+      - name: Playwright tests
+        env:
+          BASE_URL: http://localhost:8000
+        run: pnpm run test:e2e
+
+      - name: Upload server.log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: server-log
+          path: server.log

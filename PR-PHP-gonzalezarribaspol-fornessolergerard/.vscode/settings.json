@@ -1,0 +1,43 @@
+{
+  // Configuraciones generales del editor
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": true,
+  "editor.codeActionsOnSave": {
+      "source.fixAll": "always"
+  },
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "[php]": {
+    "editor.defaultFormatter": "junstyle.php-cs-fixer"
+  },
+  "editor.tabSize": 2,
+  "editor.wordWrap": "on",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "workbench.iconTheme": "vscode-icons",
+
+  // Configuraciones de HTML
+  "editor.linkedEditing": true,
+
+  // Configuraciones de PHP
+  "php.validate.enable": true,
+  "php.validate.executablePath": "/usr/local/bin/php",
+
+  // Configuraciones para PHPCS (PHP CodeSniffer)
+  "phpcs.enable": true,
+  "phpcs.standard": "PSR12",
+  "phpcs.executablePath": "./vendor/bin/phpcs",
+
+  // Configuraciones para Prettier
+  "prettier.singleQuote": true,
+  "prettier.trailingComma": "es5",
+  "prettier.tabWidth": 2,
+
+  // Configuraciones para GitLens
+  "gitlens.currentLine.enabled": true,
+  "gitlens.hovers.enabled": true,
+  "gitlens.codeLens.recentChange.enabled": true,
+  "gitlens.codeLens.authors.enabled": true,
+
+  // Configuraciones para Conventional Commits
+  "conventionalCommits.scopes": ["feat", "fix", "docs", "chore", "refactor", "perf"]
+}
